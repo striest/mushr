@@ -1,0 +1,11 @@
+<launch>
+    <arg name="control_topic" default="/car/mux/ackermann_cmd_mux/input/navigation" />
+    <arg name="init_pose_topic" default="/initialpose" />
+    <arg name="plan_file" default="$(find mushr_ros_intro)/plans/figure_8.txt" />
+
+    <node pkg="mushr_ros_intro" type="path_publisher.py" name="path_publisher" output="screen">
+        <param name="control_topic" value="$(arg control_topic)" />
+        <param name="init_pose_topic" value="$(arg init_pose_topic)" />
+        <param name="plan_file" value="$(arg plan_file)" />
+    </node>
+</launch>
