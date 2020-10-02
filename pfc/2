@@ -1,0 +1,64 @@
+import rospy
+
+import numpy as np
+
+from ackermann_msgs.msg import AckermannDrive
+from geometry_msgs.msg import Pose, PoseStamped, PoseArray
+
+class PurePursuitController:
+    """
+    Implements pure-pursuit for an Ackermann-steered vehicle.
+    """
+    def __init__(self, lookahead=1.0, max_v=0.5):
+        """
+        Args:
+            lookahead: The location on the traj to drive to
+            velocity: The max speed for pfc
+        """
+        self.lookahead_dist = lookahead
+        self.max_v = max_v
+        self.path = np.array([])
+        self.pose = Pose()
+
+    def handle_pose(self, msg):
+        self.pose = msg.pose
+
+    def handle_path(self, msg):
+        acc = []
+        for pose in msg.poses:
+            x = pose.position.x
+            y = pose.position.y
+            acc.append(np.array([x, y]))
+
+        self.path = np.stack(acc, axis=0)
+
+    def get_action(self):
+        ego_x = self.pose.position.x
+        ego_y = self.pose.position.y
+        ego_yaw = self.quat_2_yaw(self.pose)
+
+    def get_path_point(self):
+        """
+        Finds the path point closest to the robot
+        """
+        if len(self.path) == 0:
+            return np.zeros(2)
+        ego_x = self.pose.position.x
+        ego_y = self.pose.position.y
+        ego_pose = np.array([[ego_x, ego_y]])
+        dists = np.hypot(ego_pose, self.path)
+        path_point = self.path[np.argmin(dists)]
+        print(dists)
+        print(path_point)
+        return self.path_point
+
+
+    def quat_2_yaw(self, pose):
+        #Gets yaw from pose
+        qw = pose.orientation.w
+        qx = pose.orientation.x
+        qy = pose.orientation.y
+        qz = pose.orientation.z
+        yaw = np.arctan2(2*(qw*qz + qx*qy), 1 - 2 * (qy*qy + qz*qz))
+        return yaw
+

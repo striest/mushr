@@ -18,6 +18,9 @@ class PlannerGUI:
         self.goal = Pose()
         self.path = PoseArray()
 
+        self.lookahead_pt = Pose()
+        self.path_pt = Pose()
+
         self.fig = plt.figure(figsize=figsize)
         self.ax = self.fig.add_subplot(111)
 
@@ -40,6 +43,16 @@ class PlannerGUI:
 
     def handle_path(self, msg):
         self.path = msg
+
+    def handle_lookahead_point(self, msg):
+        self.lookahead_pt = msg
+
+    def handle_path_point(self, msg):
+        self.path_pt = msg
+
+    def draw_pfc(self):
+        self.ax.scatter(self.path_pt.position.x, self.path_pt.position.y, c='r', marker='.', label='PFC path pt')
+        self.ax.scatter(self.lookahead_pt.position.x, self.lookahead_pt.position.y, c='b', marker='.', label='PFC lookahead pt')
 
     def draw_history(self):
         for i, pose in enumerate(self.pose_history):
@@ -66,7 +79,7 @@ class PlannerGUI:
     def draw_path(self):
         xs = [p.position.x for p in self.path.poses]
         ys = [p.position.y for p in self.path.poses]
-        self.ax.plot(xs, ys, marker='.', c='g', label='Planned Path')
+        self.ax.plot(xs, ys, c='g', label='Planned Path')
 
     def redraw(self):
         print('redrawing...')
@@ -77,6 +90,7 @@ class PlannerGUI:
         self.draw_path()
         self.draw_goal()
         self.draw_pose()
+        self.draw_pfc()
 
         self.ax.set_xlim(*self.x_window)
         self.ax.set_ylim(*self.y_window)

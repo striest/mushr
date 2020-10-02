@@ -12,7 +12,7 @@ def main():
     pose_sub = rospy.Subscriber('/car/car_pose', PoseStamped, planner.handle_pose)
     goal_sub = rospy.Subscriber('/planner/goal', Pose, planner.handle_goal)
     path_pub = rospy.Publisher('/planner/path', PoseArray, queue_size=1)
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(1)
 
     while not rospy.is_shutdown():
         print('New plan...')
