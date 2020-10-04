@@ -59,7 +59,9 @@ class PurePursuitController:
         print('X-disp to lookahead =\n{}'.format(x_disp))
         print('Y-disp to lookahead =\n{}'.format(y_disp))
         u_angle = (2 * y_disp) / (l_dist ** 2)
-        u_velocity = self.kp * (l_dist / self.lookahead_dist)
+        u_velocity = self.kp * (l_dist / self.lookahead_dist) * self.max_v
+        if u_velocity < 0.3: #An inelegant way of dealing w/ the VESC deadzone.
+            u_velocity = 0.3 if l_dist > 0.05 else 0.
 
         print('Commanded V =\n{}'.format(u_velocity))
         print('Commanded ang =\n{}'.format(u_angle))

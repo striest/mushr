@@ -7,9 +7,10 @@ from geometry_msgs.msg import Pose, PoseStamped
 
 class GoalPublisher:
     def __init__(self, r = 1.5):
-        self.resample = True
+        self.resample = False
         self.r = r
         self.goal = Pose()
+        self.sample_goal()
 
     def sample_goal(self):
         gx = (random.random() - 0.5) * 2*self.r
@@ -31,8 +32,6 @@ class GoalPublisher:
     def handle_pose(self, msg):
         p = msg.pose
         self.resample = self.should_resample(p)
-        if self.resample:
-            self.sample_goal()
 
 def main():
     goal_publisher = GoalPublisher(r=2)
@@ -42,7 +41,7 @@ def main():
 
     pose_sub = rospy.Subscriber('/car/car_pose', PoseStamped, goal_publisher.handle_pose)
 
-    while not rospy.is_shutdown():
+    while not rospy.is_shutdown() and not goal_publisher.resample:
         goal_pub.publish(goal_publisher.goal)
         rate.sleep()
 
