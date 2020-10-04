@@ -19,14 +19,19 @@ class PurePursuitController:
         self.lookahead_dist = lookahead
         self.max_v = max_v
         self.path = np.array([])
-        self.path_point = np.zeros(2)
+        self.path_point = np.ones(2) * float('inf')
         self.path_point_idx = -1
-        self.lookahead_point = np.zeros(2)
+        self.lookahead_point = np.ones(2) * float('inf')
         self.kp = kp
         self.pose = Pose()
+        self.in_cusp = False
 
     def handle_pose(self, msg):
         self.pose = msg.pose
+        if np.any(np.isinf(self.path_point)):
+            self.path_point = np.array([self.pose.position.x, self.pose.position.y])
+        if np.any(np.isinf(self.lookahead_point)):
+            self.lookahead_point = np.array([self.pose.position.x, self.pose.position.y])
 
     def handle_path(self, msg):
         acc = []
@@ -36,6 +41,8 @@ class PurePursuitController:
             acc.append(np.array([x, y]))
 
         self.path = np.stack(acc, axis=0)
+        self.path_point_idx = 0
+        print(self.path)
 
     def get_action(self):
         ego_x = self.pose.position.x
@@ -43,6 +50,7 @@ class PurePursuitController:
         ego_yaw = self.quat_2_yaw(self.pose) #This val is yaw from x_origin to ego_y_ax
 
         self.path_point, self.path_point_idx = self.get_path_point()
+        print(self.path_point, self.path_point_idx, len(self.path))
         self.lookahead_point = self.get_lookahead_point()
 
         #Dist to lookahead
@@ -60,11 +68,21 @@ class PurePursuitController:
         print('Y-disp to lookahead =\n{}'.format(y_disp))
         u_angle = (2 * y_disp) / (l_dist ** 2)
         u_velocity = self.kp * (l_dist / self.lookahead_dist) * self.max_v
+
         if u_velocity < 0.3: #An inelegant way of dealing w/ the VESC deadzone.
-            u_velocity = 0.3 if l_dist > 0.05 else 0.
+            u_velocity = 0.3 if abs(x_disp) > 0.05 else 0.
+
+        if l_ang > (pi/2) and l_ang < 3*pi/2:
+            u_velocity *= -1
 
         print('Commanded V =\n{}'.format(u_velocity))
         print('Commanded ang =\n{}'.format(u_angle))
+
+        self.in_cusp = (len(self.path) > 0) and (u_velocity == 0.) and (np.linalg.norm(self.path_point-self.path[-1]) > 0.05)
+
+        if self.in_cusp:
+            #This should jump us to the other close path point on the cusp.
+            self.path_point_idx += 1
 
         u_msg = AckermannDriveStamped()
         u_msg.drive.speed = u_velocity
@@ -72,7 +90,6 @@ class PurePursuitController:
 
         return u_msg
         
-
     def get_path_point(self):
         """
         Finds the path point closest to the robot
@@ -84,9 +101,10 @@ class PurePursuitController:
         ego_pose = np.array([[ego_x, ego_y]])
         disps = (ego_pose - self.path)
         dists = np.hypot(disps[:, 0], disps[:, 1])
-        path_point_idx = np.argmin(dists)
+        path_point_idx = np.argmin(dists[self.path_point_idx:]) + self.path_point_idx
         path_point = self.path[path_point_idx]
         return path_point, path_point_idx
+
 
     def get_lookahead_point(self):
         """

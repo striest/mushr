@@ -18,7 +18,7 @@ def main():
     lookahead_pt_sub = rospy.Subscriber('/pfc/lookahead_point', Pose, gui.handle_lookahead_point)
     path_pt_sub = rospy.Subscriber('/pfc/path_point', Pose, gui.handle_path_point)
 
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(60)
 
     while not rospy.is_shutdown():
         print('looping...')
