@@ -1,2 +1,4 @@
-mushr/*
-mushr_sim/*
+mushr/
+mushr_sim/
+*.pyc
+__pycache__/
