@@ -27,7 +27,7 @@ def main():
     rate = rospy.Rate(1/freq)
     cmd = AckermannDrive(speed=1.0, steering_angle=0.3)
 
-    pose_sub = rospy.Subscriber('/car/car_pose', PoseStamped, pathgen.handle_pose)
+    pose_sub = rospy.Subscriber('/car/particle_filter/inferred_pose', PoseStamped, pathgen.handle_pose)
     path_pub = rospy.Publisher('/planner/path', PoseArray, queue_size=1)
 
 

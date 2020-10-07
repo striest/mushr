@@ -12,12 +12,12 @@ def main():
     rospy.init_node('pfc_node')
     rate = rospy.Rate(10)
 
-    pose_sub = rospy.Subscriber('/car/car_pose', PoseStamped, controller.handle_pose)
+    pose_sub = rospy.Subscriber('/car/particle_filter/inferred_pose', PoseStamped, controller.handle_pose)
     path_sub = rospy.Subscriber('/planner/path', PoseArray, controller.handle_path)
 
     lookahead_pt_pub = rospy.Publisher('/pfc/lookahead_point', Pose, queue_size=1)
     path_pt_pub = rospy.Publisher('/pfc/path_point', Pose, queue_size=1)
-    ctrl_pub = rospy.Publisher('/car/mux/ackermann_cmd_mux/input/teleop', AckermannDriveStamped, queue_size=1)
+    ctrl_pub = rospy.Publisher('/car/mux/ackermann_cmd_mux/input/navigation', AckermannDriveStamped, queue_size=1)
 
     while not rospy.is_shutdown():
         controller.get_action()
