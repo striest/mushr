@@ -142,13 +142,17 @@ class PurePursuitController:
         msg = Pose()
         msg.position.x = self.path_point[0]
         msg.position.y = self.path_point[1]
-        return msg
+        out = PoseStamped(pose=msg)
+        out.header.frame_id = "/map"
+        return out
 
     def lookahead_point_msg(self):
         msg = Pose()
         msg.position.x = self.lookahead_point[0]
         msg.position.y = self.lookahead_point[1]
-        return msg
+        out = PoseStamped(pose=msg)
+        out.header.frame_id = "/map"
+        return out
 
     def quat_2_yaw(self, pose):
         #Gets yaw from pose

@@ -12,11 +12,11 @@ def main():
 
     pose_sub = rospy.Subscriber('/car/particle_filter/inferred_pose', PoseStamped, gui.handle_pose)
 
-    goal_sub = rospy.Subscriber('/car/planner/goal', Pose, gui.handle_goal)
+    goal_sub = rospy.Subscriber('/car/planner/goal', PoseStamped, gui.handle_goal)
     path_sub = rospy.Subscriber('/car/planner/path', PoseArray, gui.handle_path)
 
-    lookahead_pt_sub = rospy.Subscriber('/car/pfc/lookahead_point', Pose, gui.handle_lookahead_point)
-    path_pt_sub = rospy.Subscriber('/car/pfc/path_point', Pose, gui.handle_path_point)
+    lookahead_pt_sub = rospy.Subscriber('/car/pfc/lookahead_point', PoseStamped, gui.handle_lookahead_point)
+    path_pt_sub = rospy.Subscriber('/car/pfc/path_point', PoseStamped, gui.handle_path_point)
 
     rate = rospy.Rate(30)
 

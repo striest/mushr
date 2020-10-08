@@ -39,16 +39,16 @@ class PlannerGUI:
         self.cnt += 1
 
     def handle_goal(self, msg):
-        self.goal = msg
+        self.goal = msg.pose
 
     def handle_path(self, msg):
         self.path = msg
 
     def handle_lookahead_point(self, msg):
-        self.lookahead_pt = msg
+        self.lookahead_pt = msg.pose
 
     def handle_path_point(self, msg):
-        self.path_pt = msg
+        self.path_pt = msg.pose
 
     def draw_pfc(self):
         self.ax.scatter(self.path_pt.position.x, self.path_pt.position.y, c='r', marker='.', label='PFC path pt')

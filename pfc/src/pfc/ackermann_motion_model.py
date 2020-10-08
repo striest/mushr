@@ -36,7 +36,9 @@ class AckermannMotionModel:
 
         if not valid_pose(from_pose):
             print('Sampled path from invalid region')
-            return PoseArray(poses=[from_pose])
+            out = PoseArray(poses=[from_pose])
+            out.header.frame_id = "/map"
+            return out
 
         poses = [from_pose]
         print('FROM POSE')
@@ -51,7 +53,9 @@ class AckermannMotionModel:
                 cnt += 1
                 poses.extend(check_poses)
 
-        return PoseArray(poses = poses)
+        out = PoseArray(poses = poses)
+        out.header.frame_id = "/map"
+        return out
 
     def sample_action(self, v_lim=(-1.0, 1.0), max_steer=0.3):
         vel = np.random.uniform(v_lim[0], v_lim[1])

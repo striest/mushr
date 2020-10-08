@@ -15,8 +15,8 @@ def main():
     pose_sub = rospy.Subscriber('/car/particle_filter/inferred_pose', PoseStamped, controller.handle_pose)
     path_sub = rospy.Subscriber('/car/planner/path', PoseArray, controller.handle_path)
 
-    lookahead_pt_pub = rospy.Publisher('/car/pfc/lookahead_point', Pose, queue_size=1)
-    path_pt_pub = rospy.Publisher('/car/pfc/path_point', Pose, queue_size=1)
+    lookahead_pt_pub = rospy.Publisher('/car/pfc/lookahead_point', PoseStamped, queue_size=1)
+    path_pt_pub = rospy.Publisher('/car/pfc/path_point', PoseStamped, queue_size=1)
     ctrl_pub = rospy.Publisher('/car/mux/ackermann_cmd_mux/input/navigation', AckermannDriveStamped, queue_size=1)
 
     while not rospy.is_shutdown():
