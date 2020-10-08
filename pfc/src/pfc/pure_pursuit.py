@@ -75,6 +75,9 @@ class PurePursuitController:
         if l_ang > (pi/2) and l_ang < 3*pi/2:
             u_velocity *= -1
 
+        if l_dist < 0.2:
+            u_angle = u_velocity = 0.
+
         print('Commanded V =\n{}'.format(u_velocity))
         print('Commanded ang =\n{}'.format(u_angle))
 
