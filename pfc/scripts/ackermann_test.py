@@ -28,7 +28,7 @@ def main():
     cmd = AckermannDrive(speed=1.0, steering_angle=0.3)
 
     pose_sub = rospy.Subscriber('/car/particle_filter/inferred_pose', PoseStamped, pathgen.handle_pose)
-    path_pub = rospy.Publisher('/planner/path', PoseArray, queue_size=1)
+    path_pub = rospy.Publisher('/car/planner/path', PoseArray, queue_size=1)
 
 
     while not rospy.is_shutdown():

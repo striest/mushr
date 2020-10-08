@@ -12,13 +12,13 @@ def main():
 
     pose_sub = rospy.Subscriber('/car/particle_filter/inferred_pose', PoseStamped, gui.handle_pose)
 
-    goal_sub = rospy.Subscriber('/planner/goal', Pose, gui.handle_goal)
-    path_sub = rospy.Subscriber('/planner/path', PoseArray, gui.handle_path)
+    goal_sub = rospy.Subscriber('/car/planner/goal', Pose, gui.handle_goal)
+    path_sub = rospy.Subscriber('/car/planner/path', PoseArray, gui.handle_path)
 
-    lookahead_pt_sub = rospy.Subscriber('/pfc/lookahead_point', Pose, gui.handle_lookahead_point)
-    path_pt_sub = rospy.Subscriber('/pfc/path_point', Pose, gui.handle_path_point)
+    lookahead_pt_sub = rospy.Subscriber('/car/pfc/lookahead_point', Pose, gui.handle_lookahead_point)
+    path_pt_sub = rospy.Subscriber('/car/pfc/path_point', Pose, gui.handle_path_point)
 
-    rate = rospy.Rate(60)
+    rate = rospy.Rate(30)
 
     while not rospy.is_shutdown():
         print('looping...')
