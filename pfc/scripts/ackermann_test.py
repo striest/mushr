@@ -16,7 +16,7 @@ class AckermannPathGen:
         self.pose = msg.pose
 
     def get_path(self):
-        return self.model.sample_ackermann_path(self.pose, v_lim=(0., 2.), x_lim=(0.0, 3.0), y_lim=(-1.5, 1.5), n_steps=41, resample_every=10, max_steer=0.25)
+        return self.model.sample_ackermann_path(self.pose, v_lim=(-2., 2.), x_lim=(-0.5, 3.0), y_lim=(-1.5, 1.5), n_steps=20, resample_every=20, max_steer=0.25)
         
 
 def main():
