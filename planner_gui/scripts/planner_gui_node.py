@@ -10,7 +10,7 @@ def main():
     gui = PlannerGUI(x_window=(-4, 4), y_window=(-4, 4))
     rospy.init_node('planner_gui_node')
 
-    pose_sub = rospy.Subscriber('/car/car_pose', PoseStamped, gui.handle_pose)
+    pose_sub = rospy.Subscriber('/car/particle_filter/inferred_pose', PoseStamped, gui.handle_pose)
 
     goal_sub = rospy.Subscriber('/planner/goal', Pose, gui.handle_goal)
     path_sub = rospy.Subscriber('/planner/path', PoseArray, gui.handle_path)
