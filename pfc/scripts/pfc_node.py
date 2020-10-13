@@ -8,7 +8,7 @@ from geometry_msgs.msg import Pose, PoseStamped, PoseArray
 from ackermann_msgs.msg import AckermannDriveStamped
 
 def main():
-    controller = PurePursuitController(lookahead=0.8, max_v=1.0, kp=0.4)
+    controller = PurePursuitController(lookahead=0.5, max_v=1.0, kp=0.4)
     rospy.init_node('pfc_node')
     rate = rospy.Rate(20)
 
