@@ -4,7 +4,7 @@ from numpy import sin, cos, pi
 
 import matplotlib.pyplot as plt
 
-from geometry_msgs.msg import Pose, PoseStamped, PoseArray, Point
+from geometry_msgs.msg import Pose, PoseStamped, PoseArray, Point, Quaternion
 from nav_msgs.msg import MapMetaData, OccupancyGrid
 
 from extended_hybrid_astar.hybrid_astar.astarVREP import *
@@ -68,10 +68,11 @@ class HybridAStarPlanner:
         out.header.frame_id = "/map"
 
         poses = []
-        for x, y in zip(self.traj[0], self.traj[1]):
+        for x, y, yaw in zip(self.traj[0], self.traj[1], self.traj[2]):
             p = Pose()
             pt = self.map_2_pose([y, x])
             p.position = pt
+            p.orientation = self.yaw_2_quat(yaw)
             poses.append(p)
 
         out.poses = poses
@@ -142,4 +143,11 @@ class HybridAStarPlanner:
         qz = orientation.z
         yaw = np.arctan2(2*(qw*qz + qx*qy), 1 - 2 * (qy*qy + qz*qz))
         return yaw   
-        
+
+    def yaw_2_quat(self, yaw):
+        q = Quaternion()
+        q.w = cos(yaw/2)
+        q.x = 0.
+        q.y = 0.
+        q.z = sin(yaw/2)
+        return q

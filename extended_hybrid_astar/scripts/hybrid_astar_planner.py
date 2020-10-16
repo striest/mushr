@@ -30,6 +30,7 @@ if __name__ == '__main__':
 
     while not rospy.is_shutdown():
         planner.plan()
+        print(planner.should_plan)
         if planner.should_plan:
             path_pub.publish(planner.plan_msg())
         rate.sleep()
