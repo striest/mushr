@@ -20,10 +20,16 @@ if __name__ == '__main__':
     plan_sub = rospy.Subscriber('/car/planner/path', PoseArray, predictor.handle_plan)
 
     predict_pub = rospy.Publisher('/traj_prediction', PoseArray, queue_size=1)
+    segment_pub = rospy.Publisher('/path_segment', PoseArray, queue_size=1)
+
+    for _ in range(4):
+        rate.sleep()
 
     while not rospy.is_shutdown():
         if predictor.can_predict:
             predictor.predict()
+            predictor.plot_preds()
             predict_pub.publish(predictor.predict_msg)
+            segment_pub.publish(predictor.plan_segment_msg)
             
         rate.sleep()

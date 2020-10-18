@@ -27,7 +27,7 @@ class NNPredictor:
         self.plan = None
         self.prediction = None
 
-        self.network = torch.load('src/traj_prediction/networks/network_itr400.cpt', map_location='cpu')
+        self.network = torch.load('src/traj_prediction/networks/network_itr100.cpt', map_location='cpu')
         print(self.network)
 
     def handle_heightmap(self, msg):
@@ -45,10 +45,12 @@ class NNPredictor:
         x_max = self.heightmap_metadata.width * res + x_min
         y_max = self.heightmap_metadata.height * res + y_min
 
-        self.network.data_shift[0, 0, 0] = (x_min + x_max) / 2
-        self.network.data_shift[0, 0, 1] = (y_min + y_max) / 2
-        self.network.data_scale[0, 0, 0] = (x_max - x_min) / sqrt(12)
-        self.network.data_scale[0, 0, 1] = (y_max - y_min) / sqrt(12)
+        self.network.data_shift[0, 0, 0] = 0.0
+        self.network.data_shift[0, 0, 1] = 0.0
+        self.network.data_scale[0, 0, 0] = 0.5
+        self.network.data_scale[0, 0, 1] = 0.05
+        print(self.network.data_shift)
+        print(self.network.data_scale)
 
     def handle_pose(self, msg):
         x = msg.pose.position.x
@@ -97,7 +99,7 @@ class NNPredictor:
         """
         pos = np.expand_dims(self.curr_state[:2], axis=0)
         path_locs = self.plan[:, :2]
-        dists = np.linalg.norm(path_locs - pos)
+        dists = np.linalg.norm(path_locs - pos, axis=1)
         pt_idx = np.argmin(dists)
         if len(self.plan) - pt_idx > 10:
             segment = self.plan[pt_idx:pt_idx+10, :]
@@ -114,9 +116,19 @@ class NNPredictor:
         return self.heightmap is not None and self.plan is not None and self.curr_state is not None
 
     def predict(self):
+        """
+        Don't forget to transform the trajs to the right frame.
+        """
         heightmap_np = self.get_cropped_heightmap()
         plan_np = self.get_plan_segment()
         state_np = np.copy(self.curr_state)
+
+        x, y, th = self.curr_state[:3]
+        ego_HTM_tr = np.array([[1., 0., -x],[0., 1., -y],[0., 0., 1.]])
+        ego_HTM_rot = np.array([[cos(-th), -sin(-th), 0.], [sin(-th), cos(-th), 0.], [0., 0., 1.]])
+        ego_HTM = np.matmul(ego_HTM_rot, ego_HTM_tr)
+        plan_np = self.transform_traj(plan_np, ego_HTM, th)
+        state_np = np.array([0., 0., 0., state_np[3]])
 
         heightmap_torch = torch.tensor(skimage.transform.resize(heightmap_np, [24, 24])).unsqueeze(0).unsqueeze(0).float()
         plan_torch = torch.tensor(plan_np).unsqueeze(0).float()
@@ -125,9 +137,46 @@ class NNPredictor:
         with torch.no_grad():
             preds_torch = self.network.forward({'state':state_torch, 'heightmap':heightmap_torch, 'traj_plan':plan_torch})
 
-        print(preds_torch)
-
         self.prediction = preds_torch.squeeze().numpy()
+        x, y, th = self.curr_state[:3]
+        ego_HTM = np.array([[cos(th), -sin(th), x], [sin(th), cos(th), y], [0., 0., 1.]])
+
+        print(self.prediction)
+
+        self.prediction = self.transform_traj(self.prediction, ego_HTM, -th)
+        print(self.prediction)
+
+    def transform_traj(self, traj, ego_HTM, th):
+        """
+        Rotate/translate traj to be in the coordinate frame of state.
+        
+        """
+        traj_pos = np.concatenate([traj[:, :2], np.ones([len(traj), 1])], axis=1)
+        traj_pos = np.matmul(ego_HTM, traj_pos.transpose()).transpose()
+        traj_th = traj[:, 2] - th
+        traj_pos[:, 2] = traj_th
+        return traj_pos
+
+    def plot_preds(self): 
+        plan_np = self.get_plan_segment()
+        state_np = np.copy(self.curr_state)
+
+        x, y, th = self.curr_state[:3]
+        ego_HTM_tr = np.array([[1., 0., -x],[0., 1., -y],[0., 0., 1.]])
+        ego_HTM_rot = np.array([[cos(-th), -sin(-th), 0.], [sin(-th), cos(-th), 0.], [0., 0., 1.]])
+        ego_HTM = np.matmul(ego_HTM_rot, ego_HTM_tr)
+        plan_tr = self.transform_traj(plan_np, ego_HTM, th)
+
+        xs = self.prediction[:, 0]
+        ys = self.prediction[:, 1]
+        plan = self.get_plan_segment()
+        plt.show(block=False)
+        plt.clf()
+        plt.scatter(self.curr_state[0], self.curr_state[1], marker='x', color='r', label='Curr')
+        plt.plot(xs, ys, c='b', label='Pred')
+        plt.plot(plan_np[:, 0], plan_np[:, 1], c='y', label='Plan')
+        plt.legend()
+        plt.pause(1e-2)
 
     @property
     def predict_msg(self):
@@ -136,6 +185,23 @@ class NNPredictor:
 
         poses = []
         for state in self.prediction:
+            p = Pose()
+            p.position.x = state[0]
+            p.position.y = state[1]
+            p.orientation = self.yaw_2_quat(state[2])
+            poses.append(p)
+
+        msg = PoseArray()
+        msg.poses = poses
+        msg.header.frame_id='map'
+        return msg
+
+    @property
+    def plan_segment_msg(self):
+        segment = self.get_plan_segment()
+        msg = PoseArray()
+        poses = []
+        for state in segment:
             p = Pose()
             p.position.x = state[0]
             p.position.y = state[1]
