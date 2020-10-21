@@ -32,16 +32,19 @@ class HybridAStarPlanner:
         self.prune_map()
 
     def handle_pose(self, msg):
+#        print('handling pose')
         self.pose = msg.pose
         self.start = self.parse_pose(self.pose)
 
     def handle_goal(self, msg):
+#        print('handling goal')
         self.goal = self.parse_pose(msg.pose)
 
     def handle_reached_goal(self, msg):
         self.should_plan = msg.data
 
     def plan(self):
+#        print('planning...')
         if self.start is None or self.goal is None or not self.should_plan:
             return
 
@@ -54,12 +57,14 @@ class HybridAStarPlanner:
         heightmap = anglemap = np.copy(self._map) #The A* was designed for heighmap as an image.
 
         print(heightmap.shape)
-#        import pdb;pdb.set_trace()
+        import pdb;pdb.set_trace()
 
         try:
             self.traj = plan_from_VREP(heightmap, start_x, start_y, start_theta, goal_x, goal_y, goal_theta, anglemap)
         except:
-            self.traj = np.array([[self.pose_2_map(self.start)]]).transpose()
+            x, y = self.pose_2_map(self.start)
+            th = self.start[2]
+            self.traj = np.array([[x, y, th]]).transpose()
             print('No valid traj')
             print(self.traj)
 
@@ -85,8 +90,8 @@ class HybridAStarPlanner:
         #Note that np.argmax always returs the first idx that is max.
         min_y = np.argmax(np.sum(self._map, axis=1) > 0)# - margin
         min_x = np.argmax(np.sum(self._map, axis=0) > 0)# - margin
-        max_y = self._map.shape[0] - np.argmax(np.flip(np.sum(self._map, axis=1)) > 0)# + margin
-        max_x = self._map.shape[1] - np.argmax(np.flip(np.sum(self._map, axis=0)) > 0)# + margin
+        max_y = self._map.shape[0] - np.argmax(np.flip(np.sum(self._map, axis=1), axis=0) > 0)# + margin
+        max_x = self._map.shape[1] - np.argmax(np.flip(np.sum(self._map, axis=0), axis=0) > 0)# + margin
 
         self._map = self._map[min_y:max_y, min_x:max_x]
         res = self._map_metadata.resolution
