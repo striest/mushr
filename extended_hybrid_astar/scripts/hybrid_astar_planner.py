@@ -22,8 +22,10 @@ if __name__ == '__main__':
     pose_sub = rospy.Subscriber('/car/particle_filter/inferred_pose', PoseStamped, planner.handle_pose)
     #pose_sub = rospy.Subscriber('/car/car_pose', PoseStamped, planner.handle_pose)
     #goal_sub = rospy.Subscriber('/car/planner/goal', PoseStamped, planner.handle_goal)
+
     goal_sub = rospy.Subscriber('/move_base_simple/goal', PoseStamped, planner.handle_goal)
     map_sub = rospy.Subscriber('/map', OccupancyGrid, planner.handle_occupancy_grid)
+    heightmap_sub = rospy.Subscriber('/heightmap', OccupancyGrid, planner.handle_heightmap)
     exec_sub = rospy.Subscriber('/car/executive/reached_goal', Bool, planner.handle_reached_goal)
 
     rate.sleep()

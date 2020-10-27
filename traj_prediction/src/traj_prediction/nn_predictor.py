@@ -20,14 +20,18 @@ class NNPredictor:
         3. Plan
     and will produce 10 steps of predicted traj.
     """
-    def __init__(self):
+    def __init__(self, plan_length=0.5):
         self.heightmap = None
         self.heightmap_metadata = None
         self.curr_state = np.zeros(4)
         self.plan = None
+        self.plan_length = plan_length
         self.prediction = None
 
-        self.network = torch.load('src/traj_prediction/networks/network_itr100.cpt', map_location='cpu')
+        self.fig = None
+        self.axs = None
+
+        self.network = torch.load('src/traj_prediction/networks/network_itr200.cpt', map_location='cpu')
         print(self.network)
 
     def handle_heightmap(self, msg):
@@ -45,12 +49,12 @@ class NNPredictor:
         x_max = self.heightmap_metadata.width * res + x_min
         y_max = self.heightmap_metadata.height * res + y_min
 
-        self.network.data_shift[0, 0, 0] = 0.0
-        self.network.data_shift[0, 0, 1] = 0.0
-        self.network.data_scale[0, 0, 0] = 0.5
-        self.network.data_scale[0, 0, 1] = 0.05
-        print(self.network.data_shift)
-        print(self.network.data_scale)
+        self.network.data_shift[0, 0, 0] /= 100.0
+        self.network.data_shift[0, 0, 1] /= 100.0
+        self.network.data_scale[0, 0, 0] /= 100.0
+        self.network.data_scale[0, 0, 1] /= 100.0
+        #print(self.network.data_shift)
+        #print(self.network.data_scale)
 
     def handle_pose(self, msg):
         x = msg.pose.position.x
@@ -90,35 +94,50 @@ class NNPredictor:
         HTM = np.matmul(HTM_trans, np.matmul(HTM_rot, HTM_center))
         heightmap_tr = skimage.transform.warp(self.heightmap, ProjectiveTransform(matrix=HTM))
         heightmap_out = heightmap_tr[:windowsize, :windowsize]
+        #heightmap_out = np.zeros([100, 100])
 
         return heightmap_out 
 
-    def get_plan_segment(self):
+    def get_plan_segment(self, npts=10):
         """
-        Find the closest path point, and take that and the next nine.
+        Find the closest path point, move self.plan_length along it and interpolate to get npts pts
         """
         pos = np.expand_dims(self.curr_state[:2], axis=0)
         path_locs = self.plan[:, :2]
         dists = np.linalg.norm(path_locs - pos, axis=1)
         pt_idx = np.argmin(dists)
-        if len(self.plan) - pt_idx > 10:
-            segment = self.plan[pt_idx:pt_idx+10, :]
-        else:
+
+        #We're at the end of the plan. Need to repeat points
+        if len(self.plan) - pt_idx < npts:
             segment = self.plan[pt_idx:, :]
-            nrepeats = 10 - (len(self.plan) - pt_idx)
+            nrepeats = npts - (len(self.plan) - pt_idx)
             pad = np.repeat(np.expand_dims(self.plan[-1], axis=0), repeats = nrepeats, axis=0)
             segment = np.concatenate([segment, pad], axis=0)
+        #We're able to extend the plan forward
+        else:
+            curr_dist = 0.
+            curr_idx = pt_idx + 1
+            while curr_dist < self.plan_length and curr_idx < len(self.plan):
+                curr_pt = self.plan[curr_idx]
+                curr_pos = curr_pt[:2]
+                d = np.linalg.norm(curr_pos - self.plan[curr_idx-1, :2])
+                curr_dist += d
+                curr_idx += 1
+            idxs = np.linspace(pt_idx, curr_idx, npts).astype(int)
+            segment = self.plan[idxs]
+            #print('CURR DIST = {}'.format(curr_dist))
 
         return segment
 
     @property
     def can_predict(self):
-        return self.heightmap is not None and self.plan is not None and self.curr_state is not None
+        return (self.heightmap is not None) and (self.plan is not None) and (self.curr_state is not None)
 
     def predict(self):
         """
         Don't forget to transform the trajs to the right frame.
         """
+        print('predicting...')
         heightmap_np = self.get_cropped_heightmap()
         plan_np = self.get_plan_segment()
         state_np = np.copy(self.curr_state)
@@ -141,8 +160,6 @@ class NNPredictor:
         x, y, th = self.curr_state[:3]
         ego_HTM = np.array([[cos(th), -sin(th), x], [sin(th), cos(th), y], [0., 0., 1.]])
 
-        print(self.prediction)
-
         self.prediction = self.transform_traj(self.prediction, ego_HTM, -th)
         print(self.prediction)
 
@@ -157,7 +174,22 @@ class NNPredictor:
         traj_pos[:, 2] = traj_th
         return traj_pos
 
-    def plot_preds(self): 
+    def render(self):
+        plt.show(block=False)
+        if self.fig is None or self.axs is None:
+            self.fig, self.axs = plt.subplots(1, 2, figsize = (8, 4))
+        for ax in self.axs:
+            ax.clear()
+        self.plot_heightmap(self.fig, self.axs[0])
+        self.plot_preds(self.fig, self.axs[1])
+        plt.pause(1e-2)
+
+    def plot_heightmap(self, fig, ax):
+        heightmap_crop = self.get_cropped_heightmap()
+        ax.imshow(heightmap_crop, origin='lower')
+        return fig, ax
+
+    def plot_preds(self, fig, ax): 
         plan_np = self.get_plan_segment()
         state_np = np.copy(self.curr_state)
 
@@ -166,17 +198,15 @@ class NNPredictor:
         ego_HTM_rot = np.array([[cos(-th), -sin(-th), 0.], [sin(-th), cos(-th), 0.], [0., 0., 1.]])
         ego_HTM = np.matmul(ego_HTM_rot, ego_HTM_tr)
         plan_tr = self.transform_traj(plan_np, ego_HTM, th)
+        pred_tr = self.transform_traj(self.prediction, ego_HTM, th)
 
-        xs = self.prediction[:, 0]
-        ys = self.prediction[:, 1]
-        plan = self.get_plan_segment()
-        plt.show(block=False)
-        plt.clf()
-        plt.scatter(self.curr_state[0], self.curr_state[1], marker='x', color='r', label='Curr')
-        plt.plot(xs, ys, c='b', label='Pred')
-        plt.plot(plan_np[:, 0], plan_np[:, 1], c='y', label='Plan')
-        plt.legend()
-        plt.pause(1e-2)
+        ax.scatter([0], [0], marker='x', color='r', label='Curr')
+        ax.plot(pred_tr[:, 0], pred_tr[:, 1], c='b', label='Pred')
+        ax.plot(plan_tr[:, 0], plan_tr[:, 1], c='y', label='Plan')
+        ax.set_xlim(-0.25, 0.75)
+        ax.set_ylim(-0.5, 0.5)
+        ax.legend()
+        return fig, ax
 
     @property
     def predict_msg(self):

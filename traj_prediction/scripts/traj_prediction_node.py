@@ -14,7 +14,7 @@ if __name__ == '__main__':
     rate = rospy.Rate(2)
 
     heightmap_sub = rospy.Subscriber('/heightmap', OccupancyGrid, predictor.handle_heightmap)
-    heightmap_sub = rospy.Subscriber('/map', OccupancyGrid, predictor.handle_heightmap)
+#    heightmap_sub = rospy.Subscriber('/map', OccupancyGrid, predictor.handle_heightmap)
     pose_sub = rospy.Subscriber('/car/particle_filter/inferred_pose', PoseStamped, predictor.handle_pose)
     odom_sub = rospy.Subscriber('/car/vesc/odom', Odometry, predictor.handle_odom)
     plan_sub = rospy.Subscriber('/car/planner/path', PoseArray, predictor.handle_plan)
@@ -26,9 +26,10 @@ if __name__ == '__main__':
         rate.sleep()
 
     while not rospy.is_shutdown():
+        print(predictor.can_predict)
         if predictor.can_predict:
             predictor.predict()
-            predictor.plot_preds()
+            predictor.render()
             predict_pub.publish(predictor.predict_msg)
             segment_pub.publish(predictor.plan_segment_msg)
             

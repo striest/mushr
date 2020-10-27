@@ -2,18 +2,21 @@
 
 import rospy
 
-from pfc.pure_pursuit import PurePursuitController
+from pfc.pure_pursuit import PurePursuitController, PurePursuitFixedVelocityController
 
 from geometry_msgs.msg import Pose, PoseStamped, PoseArray
+from nav_msgs.msg import Odometry
 from ackermann_msgs.msg import AckermannDriveStamped
 
 def main():
-    controller = PurePursuitController(lookahead=0.8, max_v=1.0, kp=0.4)
+    #controller = PurePursuitController(lookahead=1.2, max_v=1.0, kp=0.4)
+    controller = PurePursuitFixedVelocityController(lookahead=1.5, v=1.0, kp=0.4)
     rospy.init_node('pfc_node')
     rate = rospy.Rate(20)
 
     pose_sub = rospy.Subscriber('/car/particle_filter/inferred_pose', PoseStamped, controller.handle_pose)
     path_sub = rospy.Subscriber('/car/planner/path', PoseArray, controller.handle_path)
+    odom_sub = rospy.Subscriber('/car/vesc/odom', Odometry, controller.handle_odom)
 
     lookahead_pt_pub = rospy.Publisher('/car/pfc/lookahead_point', PoseStamped, queue_size=1)
     path_pt_pub = rospy.Publisher('/car/pfc/path_point', PoseStamped, queue_size=1)

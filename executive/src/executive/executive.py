@@ -15,6 +15,7 @@ class Executive:
         self.pose_history = []
         self.history_len = history_len
         self.vel_history = []
+        self.path_cnt = 0
 
     def handle_odom(self, msg):
 #        print('handling odom')
@@ -48,7 +49,9 @@ class Executive:
         """
 
     def handle_path(self, msg):
-        self.has_new_goal = False
+        self.path_cnt += 1
+        if self.path_cnt > 10:
+            self.has_new_goal = False
 
     @property
     def should_plan(self):
@@ -56,6 +59,7 @@ class Executive:
 
     def handle_goal(self, msg):
         print('handling goal')
+        self.path_cnt = 0
         self.goal = msg.pose
         self.reached_goal = False
         self.has_new_goal = True

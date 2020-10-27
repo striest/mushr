@@ -1,0 +1,11 @@
+<launch>
+
+    <!--- Depth image to laser scan -->
+    <node pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" name="depthimage_to_laserscan" output="screen">
+        <param name="scan_height" value="3"/> 
+        <param name="output_frame_id" value="base_link"/>
+        <remap from="image" to="camera/depth/image_rect_raw"/>
+        <remap from="camera_info" to="/car/camera/depth/camera_info"/>
+    </node>
+
+</launch>
