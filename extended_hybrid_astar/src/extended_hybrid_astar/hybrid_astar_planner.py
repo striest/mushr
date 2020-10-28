@@ -25,7 +25,7 @@ class HybridAStarPlanner:
         self.pose = None
         self.start = None
         self.goal = None
-        self.traj = ([], [], [])
+        self.traj = np.zeros([0, 3])
         self.should_plan = False
 
     def handle_occupancy_grid(self, msg):
@@ -124,9 +124,17 @@ class HybridAStarPlanner:
         heightmap = anglemap = np.copy(self._combined_map) #The A* was designed for heighmap as an image.
 
         print(heightmap.shape)
+#        import pdb;pdb.set_trace()
 
         try:
-            self.traj = plan_from_VREP(heightmap, start_x, start_y, start_theta, goal_x, goal_y, goal_theta, anglemap)
+            traj = plan_from_VREP(heightmap, start_x, start_y, start_theta, goal_x, goal_y, goal_theta, anglemap, hmap_threshold=0.035)
+            traj = np.stack(traj, axis=1)
+            if self.traj.size > 0 and np.allclose(self.traj[-1], traj[-1]):
+                print('IS REPLAN')
+                if len(traj) < len(self.traj): #There are some wierd plans. This says taht the shortest feasible path is best
+                    self.traj = traj
+            else: #Always take the new plan if you're planning somewhere new.
+                self.traj = traj
         except:
             x, y = self.pose_2_map(self.start)
             th = self.start[2]
@@ -139,7 +147,10 @@ class HybridAStarPlanner:
         out.header.frame_id = "/map"
 
         poses = []
-        for x, y, yaw in zip(self.traj[0], self.traj[1], self.traj[2]):
+        for row in self.traj:
+            x = row[0]
+            y = row[1]
+            yaw = row[2]
             p = Pose()
             pt = self.map_2_pose([y, x])
             p.position = pt

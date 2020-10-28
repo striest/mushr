@@ -163,6 +163,7 @@ include_directories(
 catkin_install_python(PROGRAMS
   scripts/test_planner.py
   scripts/hybrid_astar_planner.py
+  scripts/hybrid_astar_planner_with_model.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

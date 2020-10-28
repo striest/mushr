@@ -211,7 +211,8 @@ class PurePursuitFixedVelocityController(PurePursuitController):
     Heuristically, start to slow down if you're within 1/2 lookahead distance
     """
     def __init__(self, lookahead=1.0, v=0.6, kp=0.2):
-        self.lookahead_dist = lookahead * v
+        self.lookahead_scale = lookahead
+        self.lookahead_dist = self.lookahead_scale * v
         self.max_v = v
         self.curr_v = 0.
         self.path = np.array([])
@@ -223,6 +224,10 @@ class PurePursuitFixedVelocityController(PurePursuitController):
         self.paths = []
         self.current_path = np.array([])
         self.new_path = True
+
+    def handle_vel(self, msg):
+        self.max_v = msg.data
+        self.lookahead_dist = self.lookahead_scale * self.max_v
 
     def get_action(self):
         ego_x = self.pose.position.x

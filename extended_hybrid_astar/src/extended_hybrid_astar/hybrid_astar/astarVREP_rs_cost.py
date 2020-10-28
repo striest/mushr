@@ -4,8 +4,8 @@ import matplotlib.cm as cm
 import cv2
 import time as tim
 from PIL import Image
-import hybrid_a_star as has
-import scipy.ndimage
+import hybrid_a_star_rs_cost as has
+#import scipy.ndimage
 import math
 
 def useEdges(heightmap):
@@ -39,9 +39,9 @@ def removeGoal(heightmap):
     return goaly,goalx,heightmap
 
 
-def plan_from_VREP(heightmap,startx,starty,startyaw,goalx,goaly,goalyaw,anglemap,extended=True, hmap_threshold=0.035):
+def plan_from_VREP(heightmap,startx,starty,startyaw,goalx,goaly,goalyaw,anglemap,model,extended=True, hmap_threshold=0.):
 
-    #goalyaw = -1*math.pi#-3.14
+#    goalyaw = -1*math.pi#-3.14
 
     anglemap = np.pad(anglemap,pad_width=1, mode='constant',constant_values=1 )
 
@@ -51,6 +51,7 @@ def plan_from_VREP(heightmap,startx,starty,startyaw,goalx,goaly,goalyaw,anglemap
     # np.save('x.npy',x)
     # np.save('y.npy',y)
 
-    rx,ry,ryaw, locs,directions = has.plan(startx,starty,startyaw,x,y,goalx,goaly,goalyaw,heightmap,anglemap,extended)
+    rx,ry,ryaw, locs,directions,vel,ax,ay = has.plan(startx,starty,startyaw,x,y,goalx,goaly,goalyaw,heightmap,anglemap,model,extended)
+    #rx,ry,ryaw, locs,directions,vel = has.plan(startx,starty,startyaw,x,y,goalx,goaly,goalyaw,heightmap,anglemap,extended)
 
-    return rx,ry,ryaw
+    return rx,ry,ryaw,vel,ax,ay
