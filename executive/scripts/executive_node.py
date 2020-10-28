@@ -26,6 +26,7 @@ def main():
         print(ex.vel_history)
         print(len(ex.pose_history))
         at_goal_pub.publish(ex.should_plan)
+        ex.path_cnt += 1
         rate.sleep()
 
 if __name__ == '__main__':

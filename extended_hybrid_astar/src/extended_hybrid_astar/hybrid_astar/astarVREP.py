@@ -45,7 +45,7 @@ def plan_from_VREP(heightmap,startx,starty,startyaw,goalx,goaly,goalyaw, anglema
 
     heightmap = np.pad(heightmap,pad_width=1, mode='constant',constant_values=1 )
 
-    x,y = getObstacles(heightmap, threshold=.21)
+    x,y = getObstacles(heightmap, threshold=.045)
     # np.save('x.npy',x)
     # np.save('y.npy',y)
 

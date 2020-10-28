@@ -84,7 +84,7 @@ class HybridAStarPlanner:
         metadata_out.width = int( (out_xmax - metadata_out.origin.position.x) / metadata_out.resolution ) + 1
         metadata_out.height = int( (out_ymax - metadata_out.origin.position.y) / metadata_out.resolution ) + 1
 
-        map2_scaled = rescale(map2, map2_2_map1_scaling, multichannel=False)
+        map2_scaled = rescale(map2, map2_2_map1_scaling, multichannel=False, anti_aliasing=False)
         map1_acc = np.zeros([metadata_out.width, metadata_out.height])
         map2_acc = np.zeros([metadata_out.width, metadata_out.height])
         m1_start_x = int( (m1_xmin - metadata_out.origin.position.x) / metadata_out.resolution )
@@ -111,10 +111,10 @@ class HybridAStarPlanner:
         self.should_plan = msg.data
 
     def plan(self):
-#        print('planning...')
         if self.start is None or self.goal is None or not self.should_plan or self._combined_map is None:
             return
 
+        print('planning...')
         print(self.start)
         print(self.goal)
         start_y, start_x = self.pose_2_map(self.start)
@@ -124,7 +124,6 @@ class HybridAStarPlanner:
         heightmap = anglemap = np.copy(self._combined_map) #The A* was designed for heighmap as an image.
 
         print(heightmap.shape)
-#        import pdb;pdb.set_trace()
 
         try:
             self.traj = plan_from_VREP(heightmap, start_x, start_y, start_theta, goal_x, goal_y, goal_theta, anglemap)

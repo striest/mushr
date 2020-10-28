@@ -37,7 +37,8 @@ class DataCollector:
         """
         poses = np.array(self.poses)
         vels = np.array(self.velocities)
-        start_time = max(poses[0, 3], vels[0, 1])
+        start_idx = np.min(np.argwhere(vels[:, 0] > 0))
+        start_time = vels[start_idx, 1]
         stop_time = min(poses[-1, 3], vels[-1, 1])
         poses[:, 3] -= start_time
         vels[:, 1] -= start_time

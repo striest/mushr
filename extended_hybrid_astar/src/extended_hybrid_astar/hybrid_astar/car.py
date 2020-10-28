@@ -16,10 +16,10 @@ from scipy.spatial.transform import Rotation as Rot
 # MAX_STEER = 0.2  # [rad] maximum steering angle
 
 WB = 12.  # rear to front wheel
-W = 12.  # width of car
+W = 6.  # width of car
 LF = 10  # distance from rear to vehicle front end
 LB = 2  # distance from rear to vehicle back end
-MAX_STEER = 0.3#.4#.28#0.29  # [rad] maximum steering angle
+MAX_STEER = 0.7#.4#.28#0.29  # [rad] maximum steering angle
 
 # WB = 80  # rear to front wheel
 # W = 80  # width of car

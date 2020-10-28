@@ -27,6 +27,11 @@ class PurePursuitController:
         self.pose = Pose()
         self.paths = []
         self.current_path = np.array([])
+        self.new_path = True
+        self.path_idx = 0
+
+    def handle_exec(self, msg):
+        self.new_path = msg.data
 
     def handle_odom(self, msg):
         self.curr_v = msg.twist.twist.linear.x
@@ -48,9 +53,12 @@ class PurePursuitController:
         if acc:
             self.path = np.stack(acc, axis=0)
             self.paths = self.split_path(self.path)
-            self.current_path = self.paths[0]
+            if self.new_path:
+                self.path_idx = 0
+                self.current_path = self.paths[self.path_idx]
         self.path_point_idx = 0
         #print(self.path)
+        self.new_path = False
 
     def split_path(self, path):
         """
@@ -110,10 +118,10 @@ class PurePursuitController:
         if l_dist < 0.1:
             u_angle = u_velocity = 0.
 
-            if len(self.paths) > 1: #
+            if self.path_idx < len(self.paths)- 1: #
                 print('changing paths')
-                self.paths.pop(0)
-                self.current_path = self.paths[0]
+                self.path_idx += 1
+                self.current_path = self.paths[self.path_idx]
                 self.path_point_idx = 0
 
 #        print('Commanded V =\n{}'.format(u_velocity))
@@ -214,6 +222,7 @@ class PurePursuitFixedVelocityController(PurePursuitController):
         self.pose = Pose()
         self.paths = []
         self.current_path = np.array([])
+        self.new_path = True
 
     def get_action(self):
         ego_x = self.pose.position.x

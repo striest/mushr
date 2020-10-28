@@ -15,7 +15,8 @@ def heightmap_msg(heightmap, metadata):
     """
     msg = OccupancyGrid()
     msg.header.frame_id='/map'
-    msg.data = (heightmap.flatten()*100).astype(np.uint8)
+    hmap_int = (heightmap*100).astype(np.uint8)
+    msg.data = hmap_int.flatten()
 
     msg.info = MapMetaData(
         resolution=metadata['resoluion'],

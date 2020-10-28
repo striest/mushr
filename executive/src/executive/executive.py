@@ -49,8 +49,7 @@ class Executive:
         """
 
     def handle_path(self, msg):
-        self.path_cnt += 1
-        if self.path_cnt > 10:
+        if self.path_cnt > 3:
             self.has_new_goal = False
 
     @property
