@@ -5,6 +5,8 @@ import copy
 
 from skimage.transform import rescale
 from numpy import sin, cos, pi
+
+from std_msgs.msg import Float32
 from geometry_msgs.msg import Pose, PoseStamped, PoseArray, Point, Quaternion
 from nav_msgs.msg import MapMetaData, OccupancyGrid
 
@@ -15,7 +17,7 @@ class HybridAStarPlanner:
     Wrapper class around the hybrid a* code
     Essentially, gathers pose, map and goal and passes it onto the planner
     """
-    def __init__(self):
+    def __init__(self, height_threshold = 0.01):
         self._map_metadata = None
         self._map = None
         self._heightmap_metadata = None
@@ -27,6 +29,11 @@ class HybridAStarPlanner:
         self.goal = None
         self.traj = np.zeros([0, 3])
         self.should_plan = False
+        self.height_threshold = height_threshold
+        self.desired_velocity = 0.5
+
+    def vel_msg(self):
+        return Float32(data=self.desired_velocity)
 
     def handle_occupancy_grid(self, msg):
         self._map_metadata = msg.info
@@ -127,7 +134,7 @@ class HybridAStarPlanner:
 #        import pdb;pdb.set_trace()
 
         try:
-            traj = plan_from_VREP(heightmap, start_x, start_y, start_theta, goal_x, goal_y, goal_theta, anglemap, hmap_threshold=0.035)
+            traj = plan_from_VREP(heightmap, start_x, start_y, start_theta, goal_x, goal_y, goal_theta, anglemap, hmap_threshold=self.height_threshold)
             traj = np.stack(traj, axis=1)
             if self.traj.size > 0 and np.allclose(self.traj[-1], traj[-1]):
                 print('IS REPLAN')
@@ -138,7 +145,7 @@ class HybridAStarPlanner:
         except:
             x, y = self.pose_2_map(self.start)
             th = self.start[2]
-            self.traj = np.array([[x, y, th]]).transpose()
+            self.traj = np.array([[x, y, th]])
             print('No valid traj')
             print(self.traj)
 

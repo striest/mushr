@@ -210,7 +210,7 @@ class PurePursuitFixedVelocityController(PurePursuitController):
     Pure pursuit, but now we have it traverse the path at a fixed speed.
     Heuristically, start to slow down if you're within 1/2 lookahead distance
     """
-    def __init__(self, lookahead=1.0, v=0.6, kp=0.2):
+    def __init__(self, lookahead=1.0, v=0.6, kp=0.2, steer_scaling=1.0):
         self.lookahead_scale = lookahead
         self.lookahead_dist = self.lookahead_scale * v
         self.max_v = v
@@ -224,7 +224,8 @@ class PurePursuitFixedVelocityController(PurePursuitController):
         self.paths = []
         self.current_path = np.array([])
         self.new_path = True
-
+        self.steer_scaling = 1.0 #Let's put a hyperparameter on our steer rate as is doesn't match reality
+ 
     def handle_vel(self, msg):
         self.max_v = msg.data
         self.lookahead_dist = self.lookahead_scale * self.max_v
@@ -252,6 +253,9 @@ class PurePursuitFixedVelocityController(PurePursuitController):
 #        print('X-disp to lookahead =\n{}'.format(x_disp))
 #        print('Y-disp to lookahead =\n{}'.format(y_disp))
         u_angle = (2 * y_disp) / (l_dist ** 2)
+
+        u_angle *= self.steer_scaling
+
         if l_dist > self.lookahead_dist/2:
             u_velocity = self.max_v
         else:

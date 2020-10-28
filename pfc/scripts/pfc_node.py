@@ -11,7 +11,7 @@ from ackermann_msgs.msg import AckermannDriveStamped
 
 def main():
     #controller = PurePursuitController(lookahead=1.2, max_v=1.0, kp=0.4)
-    controller = PurePursuitFixedVelocityController(lookahead=1.5, v=0.5, kp=0.4)
+    controller = PurePursuitFixedVelocityController(lookahead=1.5, v=0.5, kp=0.4, steer_scaling=0.5)
     rospy.init_node('pfc_node')
     rate = rospy.Rate(20)
 

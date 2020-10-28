@@ -15,7 +15,7 @@ from extended_hybrid_astar.hybrid_astar_planner_with_model import HybridAStarPla
 if __name__ == '__main__':
     rospy.init_node('hybrid_astar_planner_with_model')
     net = torch.load('src/extended_hybrid_astar/src/extended_hybrid_astar/hybrid_astar/network_itr200.cpt', map_location=torch.device('cpu'))
-    net = torch.load('networks/network_itr1.cpt', map_location=torch.device('cpu'))
+    net = torch.load('networks/network_itr9.cpt', map_location=torch.device('cpu'))
     net.eval()
     print(net)
 

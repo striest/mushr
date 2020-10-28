@@ -36,7 +36,7 @@ class HybridAStarPlannerWithModel(HybridAStarPlanner, object):
         goal_y, goal_x = self.pose_2_map(self.goal)
         start_theta = self.start[2]
         goal_theta = self.goal[2]
-        heightmap = anglemap = np.copy(self._combined_map) * 4.0
+        heightmap = anglemap = np.copy(self._combined_map) * 2.0
 
         print(heightmap.shape)
 #        import pdb;pdb.set_trace()

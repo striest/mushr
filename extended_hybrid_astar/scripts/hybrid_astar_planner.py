@@ -4,7 +4,7 @@ import rospy
 
 from geometry_msgs.msg import PoseArray, Pose, PoseStamped
 from nav_msgs.msg import MapMetaData, OccupancyGrid
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Float32
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,10 +14,11 @@ from extended_hybrid_astar.hybrid_astar_planner import HybridAStarPlanner
 if __name__ == '__main__':
     rospy.init_node('hybrid_astar_planner')
 
-    planner = HybridAStarPlanner()
+    planner = HybridAStarPlanner(height_threshold = 0.037)
 
     rate = rospy.Rate(10)
     path_pub = rospy.Publisher('/car/planner/path', PoseArray, queue_size=1)
+    vel_pub = rospy.Publisher('/car/planner/desired_velocity', Float32, queue_size=1)
 
     pose_sub = rospy.Subscriber('/car/particle_filter/inferred_pose', PoseStamped, planner.handle_pose)
     #pose_sub = rospy.Subscriber('/car/car_pose', PoseStamped, planner.handle_pose)
@@ -37,4 +38,5 @@ if __name__ == '__main__':
             planner.plan()
 
         path_pub.publish(planner.plan_msg())
+        vel_pub.publish(planner.vel_msg())
         rate.sleep()

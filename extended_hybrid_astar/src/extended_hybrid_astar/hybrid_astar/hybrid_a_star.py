@@ -22,7 +22,7 @@ except Exception:
     raise
 
 XY_GRID_RESOLUTION = 40.0 #4.0 #5.0  # [m]
-YAW_GRID_RESOLUTION = np.deg2rad(20.0)#np.deg2rad(5.0)  # [rad]
+YAW_GRID_RESOLUTION = np.deg2rad(10.0)#np.deg2rad(5.0)  # [rad]
 MOTION_RESOLUTION = 1.5  # [m] path interpolate resolution #originally .5
 N_STEER = 50  # number of steer command
 VR = 20.0  # robot radius
